@@ -18,6 +18,7 @@
 | `2026-09-09_四大力量牛熊週期_日內交易框架.xlsx` | 8 個工作表 + 5 個原生圖表：現況定位、四大力量各自的歷史週期表與轉折觸發事件、領先指標儀表板、日內交易劇本、資料來源 |
 | `2026-09-09_四大力量牛熊週期_日內交易報告.docx` | 同一分析的敘事版報告（10 個表格） |
 | `2026-09-08_高交額20大_低波幅20分鐘均線篩選.xlsx` | 2026-09-08 美股高交額 20 大，篩選「波幅小 + 20 分鐘均線平穩向上」的個股，含方法論與資料限制說明 |
+| `2026-09-09_盤中掃描_低波幅20分鐘均線.xlsx` | 2026-09-09 盤中掃描（美東 11:12）：篩選結論、板塊資金流、當日背景與剩餘時段時間表 |
 
 依偏好設定，只產生 Excel / Word 原始檔，不產生 PDF 或圖片。
 
@@ -28,6 +29,7 @@ pip install openpyxl python-docx
 python3 scripts/build_macro_cycle_report.py     # → 四大力量週期 Excel
 python3 scripts/build_word_report.py            # → Word 報告
 python3 scripts/build_0908_turnover_screen.py   # → 9/8 高交額篩選 Excel
+python3 scripts/build_0909_intraday_scan.py     # → 9/9 盤中掃描 Excel
 ```
 
 ### `scripts/screen_20min_ma.py` — 20 分鐘均線篩選器

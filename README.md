@@ -30,7 +30,25 @@ python3 scripts/build_macro_cycle_report.py     # → 四大力量週期 Excel
 python3 scripts/build_word_report.py            # → Word 報告
 python3 scripts/build_0908_turnover_screen.py   # → 9/8 高交額篩選 Excel
 python3 scripts/build_0909_intraday_scan.py     # → 9/9 盤中掃描 Excel
+python3 scripts/add_tradingview_links.py        # ← 最後一步：為所有 Excel 的 ticker 加 TradingView 連結
 ```
+
+> ⚠️ `add_tradingview_links.py` **必須最後執行**。上面的 build 腳本會整份覆寫 xlsx，重跑任何一個都會沖走連結。
+
+### `scripts/add_tradingview_links.py` — TradingView 超連結
+
+為 `output/*.xlsx` 內的 ticker 加上 TradingView 圖表連結（`https://www.tradingview.com/chart/?symbol=<交易所>%3A<代號>`）。
+
+| 情況 | 處理方式 |
+|---|---|
+| 短標籤格、只含 1 個 ticker（如 `XOM`、`SMH 半導體`、`能源 (XLE)`） | 直接在原格加連結，保留原有粗體/底色，只轉藍色加底線 |
+| 敘述段落（>30 字元） | 不動 — 避免把整段文字變成連結 |
+| 單格內含多個 ticker（如 `TSLA / MU / PLTR / CRWV / IREN`） | Excel 不支援單一儲存格內的部分文字連結，改由索引表覆蓋 |
+| 指標名稱（`Brent 原油`、`10 年期美債孳息`、`標普 500`、`黃金`、`道指`、`納指`、`羅素2000`） | 完全相符時連結至對應的 TVC / SP / DJ 代號 |
+
+每個檔案另加一張 **`TV_連結`** 索引表，列出該檔案出現過的所有代號、名稱、可點擊連結與出現位置。
+
+腳本可重複執行（已有連結的格會略過，索引表每次重建）。
 
 ### `scripts/screen_20min_ma.py` — 20 分鐘均線篩選器
 

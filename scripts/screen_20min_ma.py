@@ -30,6 +30,7 @@ DEFAULT_UNIVERSE = [
 RISING_RATIO_MIN = 0.70   # 20 分鐘均線的一階差分為正的比例
 R2_MIN           = 0.60   # 線性迴歸 R^2: 越高代表路徑越接近直線 (平穩)
 SLOPE_MIN        = 0.0    # 標準化斜率須為正 (向上)
+MIN_MA_POINTS    = 10     # 均線至少要有這麼多個點，判斷才有意義
 
 
 def fetch_daily(tickers, date):
@@ -74,7 +75,7 @@ def fetch_intraday(ticker, date):
 
 def ma_quality(intraday, bar="20min", ma_window=20):
     """
-    將 1 分鐘 K 線重採樣為 20 分鐘 K 線，計算 20 期移動平均，
+    將 1 分鐘 K 線重採樣為指定週期的 K 線，計算移動平均，
     再量化該均線的「向上程度」與「平穩程度」。
     """
     if intraday is None or intraday.empty:
@@ -108,7 +109,7 @@ def ma_quality(intraday, bar="20min", ma_window=20):
     vol_20m = float(rets.std()) if len(rets) > 1 else np.nan
 
     return dict(bars=len(bars), ma_points=len(ma), rising_ratio=rising_ratio,
-                slope_pct_per_bar=slope_pct, r2=float(r2), vol_20m=vol_20m)
+                slope_pct_per_bar=slope_pct, r2=float(r2), vol_bar=vol_20m)
 
 
 def main():
@@ -116,6 +117,8 @@ def main():
     ap.add_argument("--date", required=True, help="交易日 YYYY-MM-DD")
     ap.add_argument("--universe", default=None, help="逗號分隔的代號清單")
     ap.add_argument("--top", type=int, default=20, help="取成交額前 N 名")
+    ap.add_argument("--bar", default="20min",
+                    help="重採樣週期，例如 10min / 20min / 30min（預設 20min）")
     ap.add_argument("--out", default=None, help="輸出 CSV 路徑")
     args = ap.parse_args()
 
@@ -132,16 +135,16 @@ def main():
         key=lambda x: x[1], reverse=True,
     )[: args.top]
 
-    print(f"[2/3] 取前 {len(turnover)} 名的 1 分鐘 K 線並計算 20 分鐘均線 …", file=sys.stderr)
+    print(f"[2/3] 取前 {len(turnover)} 名的 1 分鐘 K 線並計算 {args.bar} 均線 …", file=sys.stderr)
     recs = []
     for rank, (t, tv, d) in enumerate(turnover, 1):
-        q = ma_quality(fetch_intraday(t, args.date))
+        q = ma_quality(fetch_intraday(t, args.date), bar=args.bar)
         day_range = (d["high"] - d["low"]) / d["close"] if d["close"] else np.nan
         rec = dict(rank=rank, ticker=t, close=d["close"],
                    chg_pct=(d["close"] / d["open"] - 1) if d["open"] else np.nan,
                    turnover_usd=tv, day_range_pct=day_range)
         rec.update(q or dict(rising_ratio=np.nan, slope_pct_per_bar=np.nan,
-                             r2=np.nan, vol_20m=np.nan))
+                             r2=np.nan, vol_bar=np.nan))
         recs.append(rec)
 
     df = pd.DataFrame(recs)
@@ -157,10 +160,14 @@ def main():
 
     print(f"[3/3] 完成。\n", file=sys.stderr)
     cols = ["rank", "ticker", "close", "chg_pct", "turnover_usd", "day_range_pct",
-            "vol_20m", "rising_ratio", "slope_pct_per_bar", "r2", "passes"]
+            "vol_bar", "rising_ratio", "slope_pct_per_bar", "r2", "passes"]
     with pd.option_context("display.width", 200, "display.max_columns", 50):
         print(df[cols].to_string(index=False,
               float_format=lambda v: f"{v:,.4f}"))
+
+    need = pd.Timedelta(args.bar) * MIN_MA_POINTS
+    print(f"\n(判定門檻: rising_ratio>={RISING_RATIO_MIN}, slope>0, R2>={R2_MIN}。"
+          f"{args.bar} 週期至少需要 {need} 的盤中資料才有意義。)", file=sys.stderr)
 
     hits = df[df["passes"]]
     print("\n=== 符合『波幅小 + 20 分鐘均線平穩向上』 ===")

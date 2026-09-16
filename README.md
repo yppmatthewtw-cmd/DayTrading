@@ -19,6 +19,7 @@
 | `2026-09-09_四大力量牛熊週期_日內交易報告.docx` | 同一分析的敘事版報告（10 個表格） |
 | `2026-09-08_高交額20大_低波幅20分鐘均線篩選.xlsx` | 2026-09-08 美股高交額 20 大，篩選「波幅小 + 20 分鐘均線平穩向上」的個股，含方法論與資料限制說明 |
 | `2026-09-09_盤中掃描_低波幅20分鐘均線.xlsx` | 2026-09-09 盤中掃描（美東 11:12）：篩選結論、板塊資金流、當日背景與剩餘時段時間表 |
+| `2026-09-16_FOMC日盤中掃描_低波幅10分鐘均線.xlsx` | 2026-09-16 FOMC 決議日掃描（美東 09:53）：為何此時點掃描不可靠、候選失效分析、四大力量框架更新、FOMC 日時間表 |
 
 依偏好設定，只產生 Excel / Word 原始檔，不產生 PDF 或圖片。
 
@@ -30,6 +31,7 @@ python3 scripts/build_macro_cycle_report.py     # → 四大力量週期 Excel
 python3 scripts/build_word_report.py            # → Word 報告
 python3 scripts/build_0908_turnover_screen.py   # → 9/8 高交額篩選 Excel
 python3 scripts/build_0909_intraday_scan.py     # → 9/9 盤中掃描 Excel
+python3 scripts/build_0916_fomc_scan.py         # → 9/16 FOMC 日掃描 Excel
 python3 scripts/add_tradingview_links.py        # ← 最後一步：為所有 Excel 的 ticker 加 TradingView 連結
 ```
 
@@ -57,7 +59,10 @@ python3 scripts/add_tradingview_links.py        # ← 最後一步：為所有 E
 ```bash
 pip install yfinance pandas numpy
 python3 scripts/screen_20min_ma.py --date 2026-09-08 --top 20 --out screen.csv
+python3 scripts/screen_20min_ma.py --date 2026-09-16 --bar 10min --top 20   # 改用 10 分鐘週期
 ```
+
+`--bar` 可指定重採樣週期（`10min` / `20min` / `30min`）。週期減半，每根 K 的隨機波動約放大 √2 倍，訊噪比下降；盤中資料不足以形成均線時，該股回傳「資料不足」而非勉強給出斜率。
 
 篩選邏輯：
 

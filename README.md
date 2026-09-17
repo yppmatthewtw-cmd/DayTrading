@@ -78,3 +78,25 @@ python3 scripts/screen_20min_ma.py --date 2026-09-16 --bar 10min --top 20   # �
 ## 免責聲明
 
 本 repo 為市場資料整理與交易框架研究，非投資建議、非買賣要約。歷史規律不保證未來重演。日內交易涉及高風險並可能損失全部本金。
+
+### MACD 柱狀圖動能量化 (`scripts/macd_histogram_momentum.py`)
+
+把「深綠 / 淺綠 / 淺紅 / 深紅」四色柱由視覺訊號轉為數值：
+
+| 層級 | 指標 | 公式 |
+|---|---|---|
+| ① | 柱值 `h` | `(DIF − DEA) × 2` |
+| ② | 四色 | `h` 正負 × `Δh` 正負 |
+| ③ | 面積 `M` / 峰值 `H` / 密度 `D` | `M = Σ|h|` 於同號區間；`D = M / 根數` |
+| ④ | 衰減率 `λ` | `(至今峰值 − 現值) / 至今峰值`，用 `cummax` 避免未來函數 |
+| ⑤ | 背馳強度 `DVG` | `1 − A₂/A₁`（且價格創新極值，且兩波同級別） |
+| ⑥ | 轉勢分 `TRS` | 六項證據加權 0–100，含 10 根證據鎖存與趨勢情境閘 |
+
+```bash
+python3 scripts/macd_histogram_momentum.py --demo
+python3 scripts/macd_histogram_momentum.py --csv bars.csv --preset 5min
+```
+
+三個容易做錯、且會讓指標失效的地方：級別過濾（雜訊波不可參與背馳比較）、
+`λ` 必須用 cummax、TRS 各項證據必須鎖存（否則 80 分在數學上不可能達到）。
+輸出說明書：`output/2026-09-17_MACD柱狀圖動能量化_轉勢指標.xlsx`
